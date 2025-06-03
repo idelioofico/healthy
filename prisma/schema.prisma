@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model HealthUnit {
+  id        String   @id @default(uuid())
+  name      String
+  province  String
+  type      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  professionals HealthProfessional[]
+
+  @@map("health_units")
+}
+
+model Patient {
+  id        String   @id @default(uuid())
+  fullName  String   @map("full_name")
+  nid       String   @unique
+  birthDate DateTime @map("birth_date")
+  gender    String
+  phone     String
+  address   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  records      ClinicalRecord[]
+  accessCodes  AccessCode[]
+  accessLogs   AccessLog[]
+
+  @@map("patients")
+}
+
+model HealthProfessional {
+  id           String     @id @default(uuid())
+  fullName     String     @map("full_name")
+  role         String
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  healthUnitId String     @map("health_unit_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  healthUnit    HealthUnit       @relation(fields: [healthUnitId], references: [id])
+  records       ClinicalRecord[]
+  accessCodes   AccessCode[]
+  accessLogs    AccessLog[]
+
+  @@map("health_professionals")
+}
+
+model AccessCode {
+  id            String   @id @default(uuid())
+  patientId     String   @map("patient_id")
+  code          String
+  requestedById String   @map("requested_by_id")
+  accessType    String   @map("access_type")
+  validUntil    DateTime @map("valid_until")
+  used          Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  patient     Patient           @relation(fields: [patientId], references: [id])
+  requestedBy HealthProfessional @relation(fields: [requestedById], references: [id])
+
+  @@map("access_codes")
+}
+
+model ClinicalRecord {
+  id             String   @id @default(uuid())
+  patientId      String   @map("patient_id")
+  professionalId String   @map("professional_id")
+  recordDate     DateTime @map("record_date")
+  notes          String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  patient      Patient           @relation(fields: [patientId], references: [id])
+  professional HealthProfessional @relation(fields: [professionalId], references: [id])
+  conditions   MedicalCondition[]
+  exams        RequestedExam[]
+
+  @@map("clinical_records")
+}
+
+model MedicalCondition {
+  id            String   @id @default(uuid())
+  recordId      String   @map("record_id")
+  conditionName String   @map("condition_name")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  record ClinicalRecord @relation(fields: [recordId], references: [id])
+
+  @@map("medical_conditions")
+}
+
+model RequestedExam {
+  id        String   @id @default(uuid())
+  recordId  String   @map("record_id")
+  examType  String   @map("exam_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  record ClinicalRecord @relation(fields: [recordId], references: [id])
+
+  @@map("requested_exams")
+}
+
+model AccessLog {
+  id             String   @id @default(uuid())
+  professionalId String   @map("professional_id")
+  patientId      String   @map("patient_id")
+  accessType     String   @map("access_type")
+  accessTime     DateTime @default(now()) @map("access_time")
+
+  professional HealthProfessional @relation(fields: [professionalId], references: [id])
+  patient     Patient           @relation(fields: [patientId], references: [id])
+
+  @@map("access_logs")
+}
