@@ -257,7 +257,7 @@ const UsersManagementPage: React.FC = () => {
               ) : (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No users found matching your search criteria.
+                    Nenhum usuário encontrado correspondente aos seus critérios de pesquisa.
                   </td>
                 </tr>
               )}
